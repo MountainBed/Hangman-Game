@@ -3,6 +3,11 @@ html {
     background: rgb(198, 221, 139);
 }
 
+body {
+    border: 10px double tan;
+    padding: 5em;
+}
+
 h1 {
     font-weight: 200%;
     font-size: 3em;

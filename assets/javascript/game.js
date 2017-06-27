@@ -12,7 +12,17 @@ var game = {
         "SNORLAX",
         "MEWTWO"
     ],
+
     attempts: 5,
+    pokeWins: 0,
+    pokeLosses: 0,
+    pokeWord: "",
+    userGuesses: [],
+    checkUser: [],
+    userString: "",
+    userWord: "",
+    userInput: "",
+
     // Selects new choice
     pokeSelect: function() {
         return this.pokeArr[Math.floor(Math.random() * this.pokeArr.length)];
@@ -29,7 +39,8 @@ var game = {
     },
     // Converts deliminator to given string in provided array
     toSpace: function(arr, str) {
-        return arr.join(str);
+        var argsString = Array.prototype.join.call(arr, '  ');
+        return argsString;
     },
     // Returns indices of user guess in given word; 0 = DNE
     checkGuess: function(ltr, word) {
@@ -51,124 +62,136 @@ var game = {
     existGuessCheck: function(guess, guessArr) {
         for (var i = 0; i < guessArr.length; i++) {
             if (guessArr[i] === guess) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     },
     // Add guess to array of existing guesses
     addGuess: function(guess, guessArr) {
         guessArr.push(guess);
         return guessArr;
     },
+    // Updates attempts by 1 try
     updateAttempts: function() {
         this.attempts = this.attempts - 1;
         return this.attempts;
-    }
-
-}
-var pokeWins = 0; // # Wins
-var userGuesses = []; // Array of guessed characters
-var checkUser = []; // Indeces of characters in correct word
-var userString = ""; // String of all choices with correct characters
-
-// Main process
-
-// Choose random word from poke Array
-var pokeAnswer = game.pokeSelect();
-
-console.log("Correct choice: " + pokeAnswer);
-
-// Create string of dashses and spaces
-userString = game.pokeDashes(pokeAnswer);
-console.log("Dashes (userstring): " + userString);
-
-document.onkeyup = function(event) {
-    userInput = String.fromCharCode(event.keyCode).toUpperCase();
-    console.log("User choice: " + userInput);
-
-    // true if choice does not exist
-    if (game.attempts > 0) {
-        if ((game.existGuessCheck(userInput, userGuesses))) {
-
-            userGuesses = game.addGuess(userInput, userGuesses);
-            if (game.checkGuess(userInput, pokeAnswer).length != 0) {
-
-                console.log("Attempts remaining: " + game.attempts);
-                checkUser = game.checkGuess(userInput, pokeAnswer);
-                console.log("checkUser: " + checkUser);
-                console.log("output: " + game.updateDashes(checkUser, userString, userInput));
-                document.getElementById("dashes").innerHTML = game.toSpace(game.updateDashes(checkUser, userString, userInput), "  ");
-                document.getElementById("userLetters").innerHTML = game.toSpace(userGuesses, "  ");
-
-            } else {
-                game.updateAttempts();
-                console.log("Attempts remaining: " + game.attempts);
-                document.getElementById("guessRemain").innerHTML = game.attempts;
-                document.getElementById("userLetters").innerHTML = game.toSpace(userGuesses, "  ");
-            }
-
+    },
+    // Checks for win
+    checkWin: function() {
+        if (this.userWord === this.pokeWord) {
+            console.log("YAY");
+            return true;
         } else {
-            console.log("Already guessed");
-            console.log("Attempts remaining: " + game.attempts);
-            document.getElementById("userLetters").innerHTML = game.toSpace(userGuesses, "  ");
-
+            console.log("NO!");
+            return false;
         }
-    } else {
-        console.log("Game over.");
-    }
+    },
+    // Convert Array to String
+    strtoArr: function(arr) {
+        var argsString = Array.prototype.join.call(arr, '');
+        return argsString;
+    },
+    // Checks for 0 attempts
+    checkLoss: function() {
+        if (this.attempts === 0) {
+            return true;
+        }
+        return false;
+    },
+    // Add win
+    addWin: function() {
+        this.pokeWins += 1;
+    },
+    // Add loss
+    addLoss: function() {
+        this.pokeLosses += 1;
+    },
+    // Chooses word from pokemon array
+    chooseWord: function() {
+        this.pokeWord = this.pokeSelect();
+    },
+    // Resets values for start of new game
+    resetAll: function() {
+        this.userGuesses = [];
+        this.attempts = 5;
+        this.userWord = "";
+        this.userString = this.pokeDashes(this.pokeWord);
+    },
+    // Prints initial html
+    printInitial: function() {
+        document.getElementById("wins").innerHTML = this.pokeWins;
+        document.getElementById("losses").innerHTML = this.pokeLosses;
+        document.getElementById("dashes").innerHTML = game.toSpace(game.pokeDashes(this.pokeWord), "  ");
+        document.getElementById("guessRemain").innerHTML = this.attempts;
+        document.getElementById("userLetters").innerHTML = this.toSpace(this.userGuesses, "  ");
+    },
+    // Main game
+    gamefunc: function() {
+        // Choose random word from poke Array
+        game.chooseWord();
 
+        console.log("Correct choice: " + game.pokeWord);
+
+        // Create string of dashses and spaces
+        game.userString = game.pokeDashes(this.pokeWord);
+
+        game.printInitial();
+
+        document.onkeyup = function(event) {
+            game.userInput = String.fromCharCode(event.keyCode).toUpperCase();
+            console.log("User choice: " + game.userInput);
+
+            // Checks if choice already exists, does not nothing
+            // Existing guess
+            if (game.existGuessCheck(game.userInput, game.userGuesses)) {
+                console.log("This choice was already made.");
+                return;
+            }
+            // New guess
+            else {
+                // New guess, letter correct
+                if (game.checkGuess(game.userInput, game.pokeWord).length != 0) {
+
+                    console.log("Attempts remaining: " + game.attempts);
+                    game.checkUser = game.checkGuess(game.userInput, game.pokeWord);
+                    game.userGuesses = game.addGuess(game.userInput, game.userGuesses);
+                    game.userWord = game.strtoArr(game.updateDashes(game.checkUser, game.userString, game.userInput));
+                    document.getElementById("dashes").innerHTML = game.toSpace(game.updateDashes(game.checkUser, game.userString, game.userInput), "  ");
+                    document.getElementById("userLetters").innerHTML = game.toSpace(game.userGuesses, "  ");
+
+                }
+                // New guess, letter incorrect
+                else {
+                    game.updateAttempts();
+                    console.log("Attempts remaining: " + game.attempts);
+                    game.userGuesses = game.addGuess(game.userInput, game.userGuesses);
+                    document.getElementById("guessRemain").innerHTML = game.attempts;
+                    document.getElementById("userLetters").innerHTML = game.toSpace(game.userGuesses, "  ");
+                }
+            }
+            // Checks for Win, sets with plus one win
+            if (game.checkWin()) {
+
+                game.addWin();
+                game.chooseWord();
+                game.resetAll();
+                game.printInitial();
+                console.log("Win, new word: " + game.pokeWord);
+
+            }
+            // Checks for Loss, resets
+            if (game.checkLoss()) {
+                game.addLoss();
+                game.chooseWord();
+                game.resetAll();
+                game.printInitial();
+                console.log("Loss, new word: " + game.pokeWord);
+            }
+        }
+
+
+    }
 }
 
-
-
-
-
-
-// while (pokeAnswer != userString && game.attempts != 0) {
-//     document.onkeyup = function(event) {
-//         userInput = String.fromCharCode(event.keyCode).toUpperCase();
-
-//         if (game.attempts != 0) {
-
-//             checkUser = game.checkGuess(userInput, pokeAnswer);
-
-//             if (checkUser.length === 0) {
-//                 userGuesses = game.addGuess(userInput, userGuesses);
-//                 console.log("User guesses: " + userGuesses);
-//                 console.log("Attempts: " + game.attempts);
-//             } else {
-
-//             }
-//         } else {
-
-//         }
-//     }
-//     game.updateAttempts();
-// }
-
-
-// checkUser = game.checkGuess(userInput, pokeAnswer);
-
-// console.log("Length of array holding indeces: " + checkUser.length);
-// console.log("User key: " + userInput);
-// console.log("Index of character in word: " + checkUser);
-// console.log("With dashes: " + game.pokeDashes(pokeAnswer));
-// console.log("With spaces: " + game.toSpace(game.pokeDashes(pokeAnswer), "  "));
-// console.log("Updated with word: " + game.toSpace(game.updateDashes(checkUser, game.pokeDashes(pokeAnswer), userInput), "  "));
-// console.log("Guess already exist? " + game.existGuessCheck(userInput, userGuesses));
-// console.log("List of guesses: " + game.addGuess(userInput, userGuesses));
-
-
-
-// Print to HTML page
-document.getElementById("wins").innerHTML = pokeWins;
-document.getElementById("dashes").innerHTML = game.toSpace(game.pokeDashes(pokeAnswer), "  ");
-document.getElementById("guessRemain").innerHTML = game.attempts;
-document.getElementById("userLetters").innerHTML = game.toSpace(userGuesses, "  ");
-
-
-// resetGuesses: function(nmbr) {
-//     nmbr = this.attempts;
-//     return nmbr;
-// }
+game.gamefunc();
