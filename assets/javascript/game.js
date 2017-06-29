@@ -126,10 +126,30 @@ var game = {
         document.getElementById("guessRemain").innerHTML = this.attempts;
         document.getElementById("userLetters").innerHTML = this.toSpace(this.userGuesses, "  ");
     },
+    // Display appropriate image
+    getimg: function() {
+        var newImg = document.getElementById("myImg");
+
+        newImg.src = "assets/images/" + this.pokeWord + ".png";
+
+    },
+    // Victory sound
+    playSoundWin: function() {
+        var snd = document.getElementById("audioW");
+
+        snd.play();
+    },
+    // loss sound
+    playSoundLoss: function() {
+        var snd = document.getElementById("audioL");
+
+        snd.play();
+    },
     // Main game
     gamefunc: function() {
         // Choose random word from poke Array
         game.chooseWord();
+        game.getimg();
 
         console.log("Correct choice: " + game.pokeWord);
 
@@ -153,7 +173,6 @@ var game = {
                 // New guess, letter correct
                 if (game.checkGuess(game.userInput, game.pokeWord).length != 0) {
 
-                    console.log("Attempts remaining: " + game.attempts);
                     game.checkUser = game.checkGuess(game.userInput, game.pokeWord);
                     game.userGuesses = game.addGuess(game.userInput, game.userGuesses);
                     game.userWord = game.strtoArr(game.updateDashes(game.checkUser, game.userString, game.userInput));
@@ -164,7 +183,6 @@ var game = {
                 // New guess, letter incorrect
                 else {
                     game.updateAttempts();
-                    console.log("Attempts remaining: " + game.attempts);
                     game.userGuesses = game.addGuess(game.userInput, game.userGuesses);
                     document.getElementById("guessRemain").innerHTML = game.attempts;
                     document.getElementById("userLetters").innerHTML = game.toSpace(game.userGuesses, "  ");
@@ -172,9 +190,10 @@ var game = {
             }
             // Checks for Win, sets with plus one win
             if (game.checkWin()) {
-
+                game.playSoundWin();
                 game.addWin();
                 game.chooseWord();
+                game.getimg();
                 game.resetAll();
                 game.printInitial();
                 console.log("Win, new word: " + game.pokeWord);
@@ -182,8 +201,10 @@ var game = {
             }
             // Checks for Loss, resets
             if (game.checkLoss()) {
+                game.playSoundLoss();
                 game.addLoss();
                 game.chooseWord();
+                game.getimg();
                 game.resetAll();
                 game.printInitial();
                 console.log("Loss, new word: " + game.pokeWord);
@@ -193,5 +214,6 @@ var game = {
 
     }
 }
-
-game.gamefunc();
+document.onkeyup = function(event) {
+    game.gamefunc();
+}
